@@ -17,6 +17,45 @@ namespace WheresMyShitMapsAt;
 public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSettings>
 {
     private static WheresMyShitMapsAt _instance;
+    private static readonly (string Name, global::WheresMyShitMapsAt.Settings.ModType Type)[] DefaultEntries =
+    [
+        ("reflect", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("cannot Regenerate", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("less Recovery Rate", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("less effect of Non-Curse Auras", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("maximum Player Resistances", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("Elemental Weakness", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("Vulnerability", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("Temporal Chains", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("increased Critical Strike Chance", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("extra Physical Damage as", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("additional Projectiles", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("increased Attack Speed", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("increased Cast Speed", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("increased Area of Effect", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("Avoid Elemental Ailments", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("Hexproof", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("cannot be Taunted", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("reduced effect of Curses", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("reduced Flask Charges gained", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("increased Quantity of Items", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("increased Rarity of Items", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("increased Pack size", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area contains many Totems", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area contains two Unique Bosses", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Unique Bosses are Possessed", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area is inhabited by Sea Witches", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area is inhabited by Humanoids", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area is inhabited by Animals", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area is inhabited by Undead", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area is inhabited by Demons", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Area contains additional packs", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Magic Monster Packs", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Rare Monsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Monsters have increased Life", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("Monsters have increased Movement Speed", global::WheresMyShitMapsAt.Settings.ModType.Good)
+    ];
+
     private readonly HighlightCache _highlightCache;
     private readonly MapHighlighter _highlighter;
     private NormalInventoryItem _previewItem = null;
@@ -33,6 +72,7 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
     public override bool Initialise()
     {
+        EnsureDefaultEntries();
         _highlighter.Initialise(Graphics);
 
         return true;
@@ -63,6 +103,27 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
     }
 
     public NormalInventoryItem GetPreviewItem() => _previewItem;
+
+    private void EnsureDefaultEntries()
+    {
+        foreach (var (name, type) in DefaultEntries)
+        {
+            var existingEntry = Settings.Entries.FirstOrDefault(entry =>
+                entry.Type == type &&
+                string.Equals(entry.Name, name, StringComparison.OrdinalIgnoreCase));
+
+            if (existingEntry != null)
+            {
+                existingEntry.Active = true;
+                continue;
+            }
+
+            Settings.Entries.Add(new TableEntry(name, type)
+            {
+                Active = true
+            });
+        }
+    }
 
     private void ProcessInventory(Dictionary<long, MapHighlightInfo> highlights)
     {
@@ -131,7 +192,7 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
             return inventoryItem?.Item != null
                 && inventoryItem.Item.TryGetComponent(out Mods mods)
                 && mods.Identified
-                && inventoryItem.Item.TryGetComponent(out Map _);
+                && inventoryItem.Item.Metadata?.StartsWith("Metadata/Items/Maps/", StringComparison.Ordinal) == true;
         }
         catch (Exception)
         {
