@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Numerics;
 using ExileCore.PoEMemory.Components;
+using WheresMyShitMapsAt.Core;
 
 namespace WheresMyShitMapsAt.Settings;
 
@@ -86,18 +87,18 @@ public sealed class TableManager(WheresMyShitMapsAtSettings settings)
 
             if (hoveredItem != null && hoveredItem.Item.TryGetComponent(out Mods mods))
             {
-                foreach (var mod in mods.ExplicitMods)
+                foreach (var modText in MapModMatcher.GetSearchableModTexts(mods))
                 {
                     ImGui.TableNextRow();
 
                     ImGui.TableNextColumn();
-                    ImGui.Text(mod.Name);
+                    ImGui.Text(modText);
 
                     ImGui.TableNextColumn();
-                    ImGui.PushID(mod.Name.GetHashCode());
+                    ImGui.PushID(modText.GetHashCode());
                     if (ImGui.Button("Add"))
                     {
-                        _selectedMod = mod.Name;
+                        _selectedMod = modText;
                         _isModalOpen = true;
                     }
                     ImGui.PopID();
