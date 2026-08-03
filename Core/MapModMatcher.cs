@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.MemoryObjects;
@@ -41,7 +42,7 @@ public sealed class MapModMatcher
 
         return targetMods.Any(entry =>
             modNames.Any(modName =>
-                modName.Contains(entry.Name)
+                modName.Contains(entry.Name, StringComparison.OrdinalIgnoreCase)
             )
         );
     }
