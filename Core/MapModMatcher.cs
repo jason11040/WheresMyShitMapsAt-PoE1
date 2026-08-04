@@ -55,6 +55,7 @@ public sealed class MapModMatcher
             .Concat(GetModTexts(mods.EnchantedStats))
             .Concat(GetModTexts(mods.FracturedStats))
             .Concat(GetModTexts(mods.CrucibleStats))
+            .Concat(GetModTexts(mods.ImplicitMods))
             .Concat(GetModTexts(mods.ExplicitMods))
             .Distinct(StringComparer.OrdinalIgnoreCase);
     }

@@ -53,7 +53,30 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
         ("Magic Monster Packs", global::WheresMyShitMapsAt.Settings.ModType.Good),
         ("Rare Monsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
         ("Monsters have increased Life", global::WheresMyShitMapsAt.Settings.ModType.Good),
-        ("Monsters have increased Movement Speed", global::WheresMyShitMapsAt.Settings.ModType.Good)
+        ("Monsters have increased Movement Speed", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageSoulEater", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("MapDeepwaterChartVoyageNoEquipmentDrops", global::WheresMyShitMapsAt.Settings.ModType.Bad),
+        ("MapDeepwaterChartAdjacentLostMessage", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentWisps", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentDivinerBox", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentArcanistBox", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentOperativeBox", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentGoldenLanterns", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentUniqueRing", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentUniqueAmulet", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentUniqueBelt", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentIncreasedRareMonsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentIncreasedMagicMonsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartAdjacentStrongboxes", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyagePackSize", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageQuantity", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageRarity", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageResourceFound", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageIncreasedRareMonsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageIncreasedMagicMonsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageMinimumMagicMonsters", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageMonstersEssenced", global::WheresMyShitMapsAt.Settings.ModType.Good),
+        ("MapDeepwaterChartVoyageRareFracture", global::WheresMyShitMapsAt.Settings.ModType.Good)
     ];
 
     private readonly HighlightCache _highlightCache;
@@ -87,6 +110,7 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
         ProcessInventory(newHighlights);
         ProcessStash(newHighlights);
+        ProcessVoyageCharts(newHighlights);
 
         _highlightCache.Update(newHighlights);
 
@@ -153,11 +177,23 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
         ProcessItems(stashItems, highlights);
     }
 
+    private void ProcessVoyageCharts(Dictionary<long, MapHighlightInfo> highlights)
+    {
+        if (!Settings.FilterInventory.Value)
+            return;
+
+        var voyageWindow = GameController.IngameState.IngameUi.VoyageWindow;
+        if (voyageWindow is not { IsValid: true, IsVisible: true })
+            return;
+
+        ProcessItems(voyageWindow.AvailableCharts, highlights);
+    }
+
     private void ProcessItems(
         IEnumerable<NormalInventoryItem> items,
         Dictionary<long, MapHighlightInfo> highlights)
     {
-        foreach (var item in items.Where(IsValidMap))
+        foreach (var item in items.Where(IsValidTargetItem))
         {
             var mods = item.Item.GetComponent<Mods>();
             var modMatch = MapModMatcher.MatchMods(mods, Settings.Entries);
@@ -185,14 +221,17 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
         _highlighter.RenderHighlights(_highlightCache.GetCurrentHighlights());
     }
 
-    private static bool IsValidMap(NormalInventoryItem inventoryItem)
+    private static bool IsValidTargetItem(NormalInventoryItem inventoryItem)
     {
         try
         {
+            var metadata = inventoryItem?.Item?.Metadata;
+            var isMap = metadata?.StartsWith("Metadata/Items/Maps/", StringComparison.Ordinal) == true;
+            var isDeepwaterChart = metadata?.StartsWith("Metadata/Items/Deepwater/", StringComparison.Ordinal) == true;
+
             return inventoryItem?.Item != null
                 && inventoryItem.Item.TryGetComponent(out Mods mods)
-                && mods.Identified
-                && inventoryItem.Item.Metadata?.StartsWith("Metadata/Items/Maps/", StringComparison.Ordinal) == true;
+                && ((isMap && mods.Identified) || isDeepwaterChart);
         }
         catch (Exception)
         {
