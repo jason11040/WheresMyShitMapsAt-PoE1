@@ -95,7 +95,9 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
     public override bool Initialise()
     {
-        EnsureDefaultEntries();
+        if (Settings.SeedDefaultEntries.Value)
+            EnsureDefaultEntries();
+
         _highlighter.Initialise(Graphics);
 
         return true;
@@ -138,13 +140,15 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
             if (existingEntry != null)
             {
-                existingEntry.Active = true;
+                if (Settings.ActivateDefaultEntries.Value)
+                    existingEntry.Active = true;
+
                 continue;
             }
 
             Settings.Entries.Add(new TableEntry(name, type)
             {
-                Active = true
+                Active = Settings.ActivateDefaultEntries.Value
             });
         }
     }
@@ -179,7 +183,9 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
     private void ProcessVoyageCharts(Dictionary<long, MapHighlightInfo> highlights)
     {
-        if (!Settings.FilterInventory.Value)
+        if (!Settings.FilterInventory.Value ||
+            !Settings.FilterDeepwaterCharts.Value ||
+            !Settings.FilterVoyageWindowCharts.Value)
             return;
 
         var voyageWindow = GameController.IngameState.IngameUi.VoyageWindow;
@@ -218,10 +224,10 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
         if (!Settings.FilterInventory.Value && !Settings.FilterStash.Value)
             return;
 
-        _highlighter.RenderHighlights(_highlightCache.GetCurrentHighlights());
+        _highlighter.RenderHighlights(_highlightCache.GetCurrentHighlights(), Settings);
     }
 
-    private static bool IsValidTargetItem(NormalInventoryItem inventoryItem)
+    private bool IsValidTargetItem(NormalInventoryItem inventoryItem)
     {
         try
         {
@@ -231,7 +237,8 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
             return inventoryItem?.Item != null
                 && inventoryItem.Item.TryGetComponent(out Mods mods)
-                && ((isMap && mods.Identified) || isDeepwaterChart);
+                && ((Settings.FilterMaps.Value && isMap && mods.Identified) ||
+                    (Settings.FilterDeepwaterCharts.Value && isDeepwaterChart));
         }
         catch (Exception)
         {
