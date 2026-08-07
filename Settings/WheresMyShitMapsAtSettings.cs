@@ -1,4 +1,5 @@
 using ExileCore.Shared.Interfaces;
+using ExileCore.Shared.Attributes;
 using ExileCore.Shared.Nodes;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -17,6 +18,8 @@ public sealed class WheresMyShitMapsAtSettings : ISettings
     public ToggleNode FilterVoyageWindowCharts { get; set; } = new(true);
     public ToggleNode SeedDefaultEntries { get; set; } = new(true);
     public ToggleNode ActivateDefaultEntries { get; set; } = new(true);
+    [IgnoreMenu]
+    public bool DefaultEntriesSeeded { get; set; }
     public ColorNode BadModColor { get; set; } = new Color(255, 0, 0, 100);
     public ColorNode GoodModColor { get; set; } = new Color(0, 255, 0, 100);
     public ColorNode MixedModColor { get; set; } = new Color(255, 200, 0, 120);

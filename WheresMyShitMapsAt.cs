@@ -95,8 +95,7 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
 
     public override bool Initialise()
     {
-        if (Settings.SeedDefaultEntries.Value)
-            EnsureDefaultEntries();
+        SeedDefaultEntriesOnce();
 
         _highlighter.Initialise(Graphics);
 
@@ -129,6 +128,17 @@ public sealed class WheresMyShitMapsAt : BaseSettingsPlugin<WheresMyShitMapsAtSe
     }
 
     public NormalInventoryItem GetPreviewItem() => _previewItem;
+
+    private void SeedDefaultEntriesOnce()
+    {
+        if (!Settings.SeedDefaultEntries.Value || Settings.DefaultEntriesSeeded)
+            return;
+
+        if (Settings.Entries.Count == 0)
+            EnsureDefaultEntries();
+
+        Settings.DefaultEntriesSeeded = true;
+    }
 
     private void EnsureDefaultEntries()
     {
